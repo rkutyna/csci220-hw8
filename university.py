@@ -21,6 +21,7 @@ def show_students(conn):
     for id, name in cur:
         body += (
             "<tr>"
+            f"<td><a href='?idNum={id}'>{id}</a></td>"
             f"<td><a href='?idNum={id}'>{name}</a></td>"
             "<td><form method='post' action='university.py'>"
             f"<input type='hidden' NAME='idNum' VALUE='{id}'>"
@@ -42,6 +43,53 @@ def deleteProfile(conn, idNum):
         return "Delete Profile Succeeded."
     else:
         return "Delete Profile Failed."
+    
+def addProfile(conn, name):
+    cursor = conn.cursor()
+
+    sql = "SELECT max(ID) FROM profiles"
+    try:
+        cursor.execute(sql)
+        data = cursor.fetchone()
+        nextID = int(data[0]) + 1
+    except:
+        nextID = 1
+
+    sql = "INSERT INTO profiles VALUES (%s,%s)"
+    params = (nextID, name)
+
+    cursor.execute(sql, params)
+    conn.commit()
+
+    body = ""
+    if cursor.rowcount > 0:
+        body = "Add Profile Succeeded."
+    else:
+        body = "Add Profile Failed."
+
+    return body, nextID
+
+def showAddProfileForm():
+    return """
+    <h2>Add A Profile</h2>
+    <p>
+    <FORM METHOD="POST">
+    <table>
+        <tr>
+            <td>Full Name</td>
+            <td><INPUT TYPE="TEXT" NAME="name" VALUE=""></td>
+        </tr>
+        <tr>
+            <td></td>
+            <td>
+            <input type="submit" name="addProfile" value="Add!">
+            </td>
+        </tr>
+    </table>
+    </FORM>
+    """
+    
+
 
 
 def show_enrollments(conn):
