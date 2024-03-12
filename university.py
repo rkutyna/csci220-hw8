@@ -69,6 +69,75 @@ def addProfile(conn, name):
 
     return body, nextID
 
+def getUpdateProfileForm(conn, idNum):
+    # First, get current data for this profile
+    cursor = conn.cursor()
+
+    sql = """
+    SELECT *
+    FROM profiles
+    WHERE id=%s
+    """
+    cursor.execute(sql, (idNum,))
+
+    data = cursor.fetchall()
+
+    # Create a form to update this profile
+    (idNum, name) = data[0]
+
+    return """
+    <h2>Update Your Profile Page</h2>
+    <p>
+    <FORM METHOD="POST">
+    <table>
+        <tr>
+            <td>Name</td>
+            <td><INPUT TYPE="TEXT" NAME="name" VALUE="%s"></td>
+        </tr>
+        <tr>
+            <td></td>
+            <td>
+            <input type="hidden" name="idNum" value="%s">
+            <input type="submit" name="completeUpdate" value="Update!">
+            </td>
+        </tr>
+    </table>
+    </FORM>
+    """ % (
+        name,
+        idNum
+    )
+    
+def processProfileUpdate(conn, idNum, name):
+    cursor = conn.cursor()
+
+    sql = "UPDATE profiles SET name=%s, WHERE id = %s"
+    params = (name, idNum)
+
+    cursor.execute(sql, params)
+    conn.commit()
+
+    if cursor.rowcount > 0:
+        return "Update Profile Succeeded."
+    else:
+        return "Update Profile Failed."
+
+def updateStatusMessage(conn, idNum, message):
+    cursor = conn.cursor()
+
+    tm = time.localtime()
+    nowtime = "%04d-%02d-%02d %02d:%02d:%02d" % tm[0:6]
+
+    sql = "INSERT INTO status(profile_id, message, dateTime) VALUES (%s,%s,%s)"
+    params = (idNum, message, nowtime)
+    cursor.execute(sql, params)
+    conn.commit()
+
+    if cursor.rowcount > 0:
+        return "Succeeded."
+    else:
+        return "Failed."
+
 def showAddProfileForm():
     return """
     <h2>Add A Profile</h2>
