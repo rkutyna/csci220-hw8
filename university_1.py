@@ -198,6 +198,50 @@ def declare_major(conn, student, department):
         conn.commit()
     except sqlite3.IntegrityError as e:
         sys.stderr.write(str(e) + '\n')
+        
+# Colin solution
+        
+# def show_enrollments(conn):
+#     cursor = conn.cursor()
+#     cursor.execute("SELECT c.number as Number, COALESCE(COUNT(e.student), 0) as Enrollment FROM course AS c LEFT OUTER JOIN enrolled AS e ON c.number = e.course GROUP BY c.number")
+#     enrollment = cursor.fetchall()
+#     print("Number|Enrollment")
+#     for row in  enrollment:
+#         print(f"{row[0]}|{row[1]}")
+#     conn.close()
+
+
+# def add_student(conn, id, name):
+#     cursor = conn.cursor()
+#     try:
+#         cursor.execute("INSERT INTO student VALUES (?, ?)", (id, name))
+#         conn.commit()
+#     except sqlite3.IntegrityError:
+#         print("UNIQUE constraint failed: student.id")
+#     finally:
+#         conn.close()
+
+# def enroll_student(conn, student, course):
+#     cursor = conn.cursor()
+#     try:
+#         cursor.execute("INSERT INTO enrolled VALUES (?, ?)", (student, course))
+#         conn.commit()
+#     except sqlite3.IntegrityError:
+#         print("UNIQUE constraint failed: enrolled.student, enrolled.course")
+#     finally:
+#         conn.close()
+
+
+# def declare_major(conn, student, department):
+#     cursor = conn.cursor()
+#     try:
+#         cursor.execute("INSERT INTO majors_in (student, dept) VALUES (?, ?)", (student, department))
+#         conn.commit()
+#     except sqlite3.IntegrityError:
+#         print("UNIQUE constraint failed: majors_in.student, majors_in.dept")
+#     finally:
+        
+#         conn.close()
 
 
 def main():
