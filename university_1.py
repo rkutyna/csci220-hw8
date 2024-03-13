@@ -298,3 +298,199 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+
+def show_Room(conn):
+    cur=conn.cursor()
+    cur.execute('SELECT number, name FROM room')
+    body = """
+    <h2>Room List</h2>
+    <p>
+    <table border=1>
+      <tr>
+        <td><font size=+1"><b>number</b></font></td>
+        <td><font size=+1"><b>capacity</b></font></td>
+      </tr>
+    """
+    
+    count = 0
+    # each iteration of this loop creates on row of output:
+    for number, capacity in cur:
+        body += (
+            "<tr>"
+            f"<td>{number}</td>"
+            f"<td><a href='?roomNum={number}'>{capacity}</a></td>"
+            "<td><form method='post' action='university.py'>"
+            f"<input type='hidden' NAME='roomNum' VALUE='{number}'>"
+            '<input type="submit" name="deletenumber" value="Delete">'
+            "</form></td>"
+            "</tr>\n"
+        )
+        count += 1
+
+    body += "</table>" f"<p>Found {count} room.</p>"
+    
+    return body
+
+
+def showRoomPage(conn, roomNum):
+    body = """
+    <a href="./university.py">Return to main page.</a>
+    """
+
+    cursor = conn.cursor()
+
+    sql = """
+    SELECT *
+    FROM room
+    WHERE number=%s
+    """
+    cursor.execute(sql, (int(roomNum),))
+
+    data = cursor.fetchall()
+
+    # show profile information
+    roomNum, capacity = data[0]
+
+    body += """
+    <h2>%s's Profile Page</h2>
+    <p>
+    <table border=1>
+        <tr>
+            <td>room</td>
+            <td>%s</td>
+        </tr>
+        <tr>
+            <td>capacity</td>
+            <td>%s</td>
+        </tr>
+    </table>
+    """ % (
+        capacity, roomNum, capacity
+    )
+
+    # provide an update button:
+    body += (
+        """
+    <FORM METHOD="POST" action="university.py">
+    <INPUT TYPE="HIDDEN" NAME="roomNum" VALUE="%s">
+    <INPUT TYPE="SUBMIT" NAME="showUpdateroomForm" VALUE="Update room">
+    </FORM>
+    """
+        % roomNum
+    )
+
+    return body
+
+
+def deleteRoom(conn, roomNum):
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM room WHERE number = %s", (roomNum,))
+    conn.commit()
+    if cursor.rowcount > 0:
+        return "Delete room Succeeded."
+    else:
+        return "Delete room Failed."
+    
+    
+
+def addRoom(conn, number, capacity):
+    cursor = conn.cursor()
+
+    #check for existing room number
+    check = "SELECT number FROM room WHERE number = %s"
+    #insert a new room
+    insert = "INSERT INTO room (number, capacity) VALUES (%s, %s)"
+    
+    try:
+        # Check if the room number already exists
+        cursor.execute(check, (number,))
+        if cursor.fetchone() is not None:
+            print("Error: A room with this number already exists.")
+            return "Add room Failed.", number
+
+        # If it does not exist, add the new room
+        cursor.execute(insert, (number, capacity))
+        conn.commit()
+        return "Added room " + number, number
+
+    except psycopg2.Error as e:
+        # Catch any other PostgreSQL errors
+        print("Database error:", e)
+        return "Add room Failed.", number
+
+def showAddRoomForm():
+    return """
+    <h2>Add A room</h2>
+    <p>
+    <FORM METHOD="POST">
+    <table>
+        <tr>
+            <td>Room Number</td>
+            <td><INPUT TYPE="TEXT" NUMBER="number" VALUE=""></td>
+        </tr>
+        <tr>
+            <td></td>
+            <td>
+            <input type="submit" name="addroom" value="Add!">
+            </td>
+        </tr>
+    </table>
+    </FORM>
+    """
+    
+    
+def getUpdateRoomForm(conn, roomNum):
+    # First, get current data for this student
+    cursor = conn.cursor()
+
+    sql = """
+    SELECT *
+    FROM room
+    WHERE number=%s
+    """
+    cursor.execute(sql, (roomNum,))
+
+    data = cursor.fetchall()
+
+    # Create a form to update this student
+    (roomNum, capacity) = data[0]
+
+    return """
+    <h2>Update Your Room Page</h2>
+    <p>
+    <FORM METHOD="POST">
+    <table>
+        <tr>
+            <td>Room Number</td>
+            <td><INPUT TYPE="TEXT" Number="number" VALUE="%s"></td>
+        </tr>
+        <tr>
+            <td></td>
+            <td>
+            <input type="hidden" name="roomNum" value="%s">
+            <input type="submit" name="completeUpdate" value="Update!">
+            </td>
+        </tr>
+    </table>
+    </FORM>
+    """ % (
+        roomNum,
+        capacity
+    )
+    
+def processRoomUpdate(conn, roomNum, capacity):
+    cursor = conn.cursor()
+
+    sql = "UPDATE room SET capacity=%s WHERE number = %s"
+    params = (capacity, roomNum)
+
+    cursor.execute(sql, params)
+    conn.commit()
+
+    if cursor.rowcount > 0:
+        return "Update Room Succeeded."
+    else:
+        return "Update Room Failed."
+    
