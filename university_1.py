@@ -1,6 +1,7 @@
 import argparse
 import sqlite3
 import sys
+import time
 
 
 def show_students(conn):

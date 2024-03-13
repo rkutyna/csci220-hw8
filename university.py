@@ -5,6 +5,7 @@ import os
 import time
 from urllib.parse import parse_qs
 from html import escape
+from course import *
 
 import psycopg2
 

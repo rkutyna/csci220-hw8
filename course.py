@@ -1,3 +1,5 @@
+import time
+
 def show_course(conn):
     cur=conn.cursor()
     cur.execute('SELECT number, capacity FROM room')
