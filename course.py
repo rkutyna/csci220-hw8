@@ -2,26 +2,28 @@ import time
 
 def show_course(conn):
     cur=conn.cursor()
-    cur.execute('SELECT number, capacity FROM room')
+    cur.execute('SELECT number, title, room FROM course')
     body = """
     <h2>Student List</h2>
     <p>
     <table border=1>
       <tr>
         <td><font size=+1"><b>number</b></font></td>
-        <td><font size=+1"><b>capacity</b></font></td>
+        <td><font size=+1"><b>title</b></font></td>
+        <td><font size=+1"><b>room</b></font></td>
       </tr>
     """
     
     count = 0
     # each iteration of this loop creates on row of output:
-    for number, capacity in cur:
+    for number, title, room in cur:
         body += (
             "<tr>"
             f"<td>{number}</td>"
-            f"<td><a href='?idNum={number}'>{capacity}</a></td>"
+            f"<td><a href='?idNum={number}'>{title}</a></td>"
+            f"<td><a href='?idNum={number}'>{room}</a></td>"
             "<td><form method='post' action='university.py'>"
-            f"<input type='hidden' NAME='idNum' VALUE='{capacity}'>"
+            f"<input type='hidden' NAME='title' VALUE='{title}'>"
             '<input type="submit" name="deleteCourse" value="Delete">'
             "</form></td>"
             "</tr>\n"
@@ -41,7 +43,7 @@ def showCoursePage(conn, number):
 
     sql = """
     SELECT *
-    FROM room
+    FROM course
     WHERE number=%s
     """
     cursor.execute(sql, (int(number),))
@@ -49,23 +51,27 @@ def showCoursePage(conn, number):
     data = cursor.fetchall()
 
     # show profile information
-    number, capacity = data[0]
+    number, title, room = data[0]
 
     body += """
     <h2>%s's Course Page</h2>
     <p>
     <table border=1>
         <tr>
-            <td>number</td>
+            <td>Number</td>
             <td>%s</td>
         </tr>
         <tr>
-            <td>Capacity</td>
+            <td>Title</td>
+            <td>%s</td>
+        </tr>
+        <tr>
+            <td>Room</td>
             <td>%s</td>
         </tr>
     </table>
     """ % (
-        number, number, capacity
+        number, number, title, room
     )
 
     # provide an update button:
@@ -83,7 +89,7 @@ def showCoursePage(conn, number):
 
 def deleteCourse(conn, number):
     cursor = conn.cursor()
-    cursor.execute("DELETE FROM room WHERE number = %s", (number,))
+    cursor.execute("DELETE FROM course WHERE number = %s", (number,))
     conn.commit()
     if cursor.rowcount > 0:
         return "Delete Course Succeeded."
@@ -91,11 +97,11 @@ def deleteCourse(conn, number):
         return "Delete Course Failed."
     
     
-def addCourse(conn, number, capacity):
+def addCourse(conn, number, title, room):
     cursor = conn.cursor()
 
-    sql = "INSERT INTO student VALUES (%s,%s)"
-    params = (number, capacity)
+    sql = "INSERT INTO course VALUES (%s,%s,%s)"
+    params = (number, title, room)
 
     cursor.execute(sql, params)
     conn.commit()
@@ -120,8 +126,12 @@ def showAddCourseForm():
             <td><INPUT TYPE="TEXT" NAME="number" VALUE=""></td>
         </tr>
         <tr>
-            <td>Full Capacity</td>
-            <td><INPUT TYPE="TEXT" NAME="capacity" VALUE=""></td>
+            <td>Title</td>
+            <td><INPUT TYPE="TEXT" NAME="title" VALUE=""></td>
+        </tr>
+        <tr>
+            <td>Room </td>
+            <td><INPUT TYPE="TEXT" NAME="room" VALUE=""></td>
         </tr>
         <tr>
             <td></td>
@@ -134,21 +144,21 @@ def showAddCourseForm():
     """
     
 
-def getUpdateCourseForm(conn, number, capacity):
+def getUpdateCourseForm(conn, number, title, room):
     # First, get current data for this student
     cursor = conn.cursor()
 
     sql = """
     SELECT *
-    FROM room
+    FROM course
     WHERE number=%s
     """
-    cursor.execute(sql, (number,capacity))
+    cursor.execute(sql, (number, title, room))
 
     data = cursor.fetchall()
 
     # Create a form to update this student
-    (number, capacity) = data[0]
+    (number, title, room) = data[0]
 
     return """
     <h2>Update Your Course Page</h2>
@@ -160,8 +170,12 @@ def getUpdateCourseForm(conn, number, capacity):
             <td><INPUT TYPE="TEXT" NAME="number" VALUE="%s"></td>
         </tr>
         <tr>
-            <td>Name</td>
-            <td><INPUT TYPE="TEXT" NAME="capacity" VALUE="%s"></td>
+            <td>Title</td>
+            <td><INPUT TYPE="TEXT" NAME="title" VALUE="%s"></td>
+        </tr>
+        <tr>
+            <td>Room</td>
+            <td><INPUT TYPE="TEXT" NAME="room" VALUE="%s"></td>
         </tr>
         <tr>
             <td></td>
@@ -174,15 +188,16 @@ def getUpdateCourseForm(conn, number, capacity):
     </FORM>
     """ % (
         number,
-        capacity
+        title,
+        room
     )
     
 
-def processCourseUpdate(conn, number, capacity):
+def processCourseUpdate(conn, number, title, room):
     cursor = conn.cursor()
 
-    sql = "UPDATE room SET capacity=%s WHERE number = %s"
-    params = (number, capacity)
+    sql = "UPDATE course SET title=%s, room = %s WHERE number = %s"
+    params = (title, room, number)
 
     cursor.execute(sql, params)
     conn.commit()
