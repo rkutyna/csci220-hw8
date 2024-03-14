@@ -7,6 +7,7 @@ from urllib.parse import parse_qs
 from html import escape
 from course import *
 from room import *
+from enrollment import *
 import psycopg2
 
 
@@ -344,6 +345,22 @@ def application(env, start_response):
         body+=show_course(conn)
         body+=showAddCourseForm()
         
+    cEnrollment=None
+    if "cnumber" in post:
+        cEnrollment=post["cnumber"][0]
+        if "addEnrollment" in post:
+            b, cEnrollment = addEnrolled(conn, post['cnumber'][0], post['id'][0])
+        elif "deleteEnrolled" in post:
+            body+=deleteEnrolled(conn, post["id"][0], post['cnumber'][0])
+    elif "cnumber" in qs:
+        cEnrollment = qs.get("cnumber")[0]
+    if cEnrollment:
+        body+=showEnrolledPage(conn, cEnrollment)
+    else:
+        body+=show_enrolled(conn)
+        body+="\n"
+        body+=showAddEnrollmentForm()
+        
     roomNum=None
     if "roomNum" in post:
         roomNum = post["roomNum"][0]
@@ -375,6 +392,10 @@ def application(env, start_response):
     else:
         body+=show_room(conn)
         body+=showAddRoomForm()
+        
+
+        
+
         
     start_response("200 OK", [("Content-Type", "text/html")])
     return [wrapBody(body, title="University").encode("utf-8")]
