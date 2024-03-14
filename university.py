@@ -6,8 +6,10 @@ import time
 from urllib.parse import parse_qs
 from html import escape
 from course import *
-
+from room import *
 import psycopg2
+
+
 
 def wrapBody(body, title="Blank Title"):
     return (
@@ -283,9 +285,9 @@ def application(env, start_response):
                 post["name"][0],
             )
         # handle case of showing a student page
-        elif "processStatusUpdate" in post:
+            """elif "processStatusUpdate" in post:
             messages = post["message"][0]
-            body += updateStatusMessage(conn, idNum, messages)
+            body += updateStatusMessage(conn, idNum, messages)"""
         elif "deleteStudent" in post:
             body += deleteStudent(conn, idNum)
             idNum = None
@@ -305,6 +307,74 @@ def application(env, start_response):
     else:
         body += show_students(conn)
         body += showAddStudentForm()
+        
+        
+    print(qs)
+    for row in post:
+        print(row)
+    courseNum=None
+    if "number" in post:
+        courseNum = post["number"][0]
+        if "showUpdateCourseForm" in post and "number" in post:
+            body+=getUpdateCourseForm(conn, courseNum)
+        elif "completeCourseUpdate" in post:
+            body += processCourseUpdate(
+                conn,
+                courseNum,
+                post["title"][0],
+                post['room'][0],
+            )
+        elif "deleteCourse" in post:
+            body+=deleteCourse(conn, courseNum)
+            courseNum=None
+    if "addCourse" in post:
+        b, courseNum = addCourse(
+            conn,
+            post["number"][0],
+            post['title'][0],
+            post['room'][0]
+        )
+        body+=b
+            
+    elif "number" in qs:
+        courseNum = qs.get("number")[0]
+    if courseNum:
+        body+=showCoursePage(conn, courseNum)
+    else:
+        body+=show_course(conn)
+        body+=showAddCourseForm()
+        
+    roomNum=None
+    if "roomNum" in post:
+        roomNum = post["roomNum"][0]
+        if "showUpdateRoomForm" in post and "roomNum" in post:
+            print("check \n \n")
+            body+=getUpdateRoomForm(conn, roomNum)
+        elif "completeRoomUpdate" in post:
+            print(roomNum)
+            body += processRoomUpdate(
+                conn,
+                roomNum,
+                post['capacity'][0],
+            )
+        elif "deleteRoom" in post:
+            body+=deleteRoom(conn, roomNum)
+            roomNum=None
+    if "addRoom" in post:
+        b, roomNum = addRoom(
+            conn,
+            post["roomNum"][0],
+            post['capacity'][0]
+        )
+        body+=b
+            
+    elif "roomNum" in qs:
+        roomNum = qs.get("roomNum")[0]
+    if roomNum:
+        body+=showRoomPage(conn, roomNum)
+    else:
+        body+=show_room(conn)
+        body+=showAddRoomForm()
         
     start_response("200 OK", [("Content-Type", "text/html")])
     return [wrapBody(body, title="University").encode("utf-8")]

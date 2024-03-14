@@ -4,7 +4,7 @@ def show_course(conn):
     cur=conn.cursor()
     cur.execute('SELECT number, title, room FROM course')
     body = """
-    <h2>Student List</h2>
+    <h2>Course List</h2>
     <p>
     <table border=1>
       <tr>
@@ -20,10 +20,10 @@ def show_course(conn):
         body += (
             "<tr>"
             f"<td>{number}</td>"
-            f"<td><a href='?idNum={number}'>{title}</a></td>"
-            f"<td><a href='?idNum={number}'>{room}</a></td>"
+            f"<td><a href='?number={number}'>{title}</a></td>"
+            f"<td>{room}</td>"
             "<td><form method='post' action='university.py'>"
-            f"<input type='hidden' NAME='title' VALUE='{title}'>"
+            f"<input type='hidden' NAME='number' VALUE='{number}'>"
             '<input type="submit" name="deleteCourse" value="Delete">'
             "</form></td>"
             "</tr>\n"
@@ -46,7 +46,7 @@ def showCoursePage(conn, number):
     FROM course
     WHERE number=%s
     """
-    cursor.execute(sql, (int(number),))
+    cursor.execute(sql,(str(number),))
 
     data = cursor.fetchall()
 
@@ -54,24 +54,24 @@ def showCoursePage(conn, number):
     number, title, room = data[0]
 
     body += """
-    <h2>%s's Course Page</h2>
+    <h2>%s</h2>
     <p>
     <table border=1>
         <tr>
-            <td>Number</td>
+            <td>number</td>
             <td>%s</td>
         </tr>
         <tr>
-            <td>Title</td>
+            <td>title</td>
             <td>%s</td>
         </tr>
         <tr>
-            <td>Room</td>
+            <td>room</td>
             <td>%s</td>
         </tr>
     </table>
     """ % (
-        number, number, title, room
+        title, number, title, room
     )
 
     # provide an update button:
@@ -98,9 +98,10 @@ def deleteCourse(conn, number):
     
     
 def addCourse(conn, number, title, room):
+    print("added course")
     cursor = conn.cursor()
 
-    sql = "INSERT INTO course VALUES (%s,%s,%s)"
+    sql = "INSERT INTO course VALUES (%s,%s, %s)"
     params = (number, title, room)
 
     cursor.execute(sql, params)
@@ -144,7 +145,7 @@ def showAddCourseForm():
     """
     
 
-def getUpdateCourseForm(conn, number, title, room):
+def getUpdateCourseForm(conn, number):
     # First, get current data for this student
     cursor = conn.cursor()
 
@@ -153,7 +154,7 @@ def getUpdateCourseForm(conn, number, title, room):
     FROM course
     WHERE number=%s
     """
-    cursor.execute(sql, (number, title, room))
+    cursor.execute(sql, (str(number),))
 
     data = cursor.fetchall()
 
@@ -161,14 +162,10 @@ def getUpdateCourseForm(conn, number, title, room):
     (number, title, room) = data[0]
 
     return """
-    <h2>Update Your Course Page</h2>
+    <h2>Update Course %s</h2>
     <p>
     <FORM METHOD="POST">
     <table>
-        <tr>
-            <td>Course Number</td>
-            <td><INPUT TYPE="TEXT" NAME="number" VALUE="%s"></td>
-        </tr>
         <tr>
             <td>Title</td>
             <td><INPUT TYPE="TEXT" NAME="title" VALUE="%s"></td>
@@ -189,7 +186,8 @@ def getUpdateCourseForm(conn, number, title, room):
     """ % (
         number,
         title,
-        room
+        room,
+        number
     )
     
 
@@ -207,7 +205,7 @@ def processCourseUpdate(conn, number, title, room):
     else:
         return "Update Course Failed."
 
-def updateStatusCourseMessage(conn, number, message):
+"""def updateStatusCourseMessage(conn, number, message):
     cursor = conn.cursor()
 
     tm = time.localtime()
@@ -222,7 +220,7 @@ def updateStatusCourseMessage(conn, number, message):
         return "Succeeded."
     else:
         return "Failed."
-
+"""
 
 
 
