@@ -359,7 +359,6 @@ def application(env, start_response):
     else:
         body+=show_enrolled(conn)
         body+="\n"
-        body+=showAddEnrollmentForm()
         
     roomNum=None
     if "roomNum" in post:
