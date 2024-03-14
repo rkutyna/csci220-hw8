@@ -32,6 +32,8 @@ def show_enrolled(conn):
             "</tr>\n"
         )
     
+    body += "</table>"
+    body += showAddEnrollmentForm()  # Add the enrollment form after the table
     return body
 
 def showEnrolledPage(conn, number):
